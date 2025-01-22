@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-const Date = ({ editEntry, entity, requiredMark }) => {
+const Text = ({ editEntry, entity, requiredMark }) => {
   return (
     <div className='col-span-6 sm:col-span-3'>
       <label
@@ -28,20 +28,22 @@ const Date = ({ editEntry, entity, requiredMark }) => {
           className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
         />
       </div>
+      {editEntry.info && (
+        <p className='text-sm text-gray-500'>{editEntry.info}</p>
+      )}
     </div>
   );
 };
 
-export default Date;
+export default Text;
 
-Date.propTypes = {
+Text.propTypes = {
   editEntry: PropTypes.shape({
-    type: PropTypes.string,
-    required: PropTypes.bool,
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
     subName: PropTypes.string,
+    info: PropTypes.string,
   }),
-  entity: PropTypes.object,
   requiredMark: PropTypes.string,
+  entity: PropTypes.object,
 };

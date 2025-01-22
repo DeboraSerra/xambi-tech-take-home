@@ -64,8 +64,6 @@ export default TextList;
 
 TextList.propTypes = {
   editEntry: PropTypes.shape({
-    type: PropTypes.string,
-    required: PropTypes.bool,
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
     subName: PropTypes.string,

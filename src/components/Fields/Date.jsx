@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
-import { EditEntryType, ValidationType } from "../utils/types";
 
-const Text = ({ editEntry, entity, requiredMark }) => {
+const Date = ({ editEntry, entity, requiredMark }) => {
   return (
     <div className='col-span-6 sm:col-span-3'>
       <label
@@ -29,28 +28,19 @@ const Text = ({ editEntry, entity, requiredMark }) => {
           className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
         />
       </div>
-      {editEntry.info && (
-        <p className='text-sm text-gray-500'>{editEntry.info}</p>
-      )}
     </div>
   );
 };
 
-export default Text;
+export default Date;
 
-Text.propTypes = {
+Date.propTypes = {
   editEntry: PropTypes.shape({
+    type: PropTypes.string,
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
-    type: PropTypes.oneOf(Object.values(EditEntryType)),
     subName: PropTypes.string,
-    isRequired: PropTypes.bool,
-    validations: PropTypes.arrayOf(
-      PropTypes.oneOf(Object.values(ValidationType))
-    ),
-    extraParam: PropTypes.object,
-    info: PropTypes.string,
   }),
-  requiredMark: PropTypes.string,
   entity: PropTypes.object,
+  requiredMark: PropTypes.string,
 };

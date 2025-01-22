@@ -2,19 +2,19 @@ import PropTypes from "prop-types";
 import React, { useEffect, useRef, useState } from "react";
 import { EditEntryType, ValidationType } from "../utils/types";
 import { validateValue } from "../utils/validations";
-import Address from "./Address";
-import Article from "./Article";
-import Checkbox from "./Checkbox";
-import Date from "./Date";
-import DoubleTextList from "./DoubleTextList";
-import Photo from "./Photo";
-import ProfilePhoto from "./ProfilePhoto";
-import Radio from "./Radio";
-import Select from "./Select";
-import Showcase from "./Showcase";
-import Text from "./Text";
-import TextArea from "./TextArea";
-import TextList from "./TextList";
+import Address from "./Fields/Address";
+import Article from "./Fields/Article";
+import Checkbox from "./Fields/Checkbox";
+import Date from "./Fields/Date";
+import DoubleTextList from "./Fields/DoubleTextList";
+import Photo from "./Fields/Photo";
+import ProfilePhoto from "./Fields/ProfilePhoto";
+import Radio from "./Fields/Radio";
+import Select from "./Fields/Select";
+import Showcase from "./Fields/Showcase";
+import Text from "./Fields/Text";
+import TextArea from "./Fields/TextArea";
+import TextList from "./Fields/TextList";
 
 const toast = {};
 
@@ -301,7 +301,13 @@ export function EditForm(props) {
                   if (!editEntry.condition) return;
                 }
                 if (!editEntry.type || editEntry.type == EditEntryType.Text) {
-                  return <Text editEntry={editEntry} />;
+                  return (
+                    <Text
+                      editEntry={editEntry}
+                      entity={entity}
+                      requiredMark={requiredMark}
+                    />
+                  );
                 } else if (editEntry.type == EditEntryType.Select) {
                   return (
                     <Select
@@ -445,15 +451,21 @@ export function EditForm(props) {
 EditForm.propTypes = {
   editEntries: PropTypes.arrayOf(
     PropTypes.shape({
-      attribute: PropTypes.string,
       attributeName: PropTypes.string,
-      type: PropTypes.oneOf(Object.values(EditEntryType)),
+      attribute: PropTypes.string,
       subName: PropTypes.string,
+      button: PropTypes.string,
+      options: PropTypes.array,
+      extraParam: PropTypes.shape({
+        isInstagramShowcase: PropTypes.bool,
+      }),
       isRequired: PropTypes.bool,
       validations: PropTypes.arrayOf(
         PropTypes.oneOf(Object.values(ValidationType))
       ),
-      extraParam: PropTypes.object,
+      info: PropTypes.string,
+      characterCount: PropTypes.number,
+      type: PropTypes.oneOf(Object.values(EditEntryType)),
     })
   ),
   title: PropTypes.string,

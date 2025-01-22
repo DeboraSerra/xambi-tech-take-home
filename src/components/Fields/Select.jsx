@@ -26,10 +26,11 @@ const Select = ({ editEntry, entity, requiredMark }) => {
               : ""
           }
           className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
-        />
-        <option>United States</option>
-        <option>Canada</option>
-        <option>Mexico</option>
+        >
+          <option>United States</option>
+          <option>Canada</option>
+          <option>Mexico</option>
+        </select>
       </div>
     </div>
   );
@@ -42,13 +43,6 @@ Select.propTypes = {
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
     subName: PropTypes.string,
-    // type: PropTypes.oneOf(Object.values(EditEntryType)),
-    // isRequired: PropTypes.bool,
-    // validations: PropTypes.arrayOf(
-    //   PropTypes.oneOf(Object.values(ValidationType))
-    // ),
-    // extraParam: PropTypes.object,
-    // info: PropTypes.string,
   }),
   entity: PropTypes.object,
   requiredMark: PropTypes.string,

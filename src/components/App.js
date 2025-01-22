@@ -4,25 +4,32 @@ import { EditForm } from "./EditForm";
 const editEntries = [
   {
     type: "Text",
-    required: true,
+    isRequired: true,
     attribute: "name",
     attributeName: "Name",
+    subName: "First and Last Name",
+    validations: "UserName",
+    info: "Please enter your full name.",
   },
   {
     type: "Date",
-    required: true,
+    isRequired: true,
     attribute: "dob",
-    attributeName: "Date of Birth",
+    attributeName: "Dar of Birth",
+    subName: "YYYY-MM-DD",
+    validations: "Date",
   },
   {
     type: "Text",
-    required: true,
+    isRequired: true,
     attribute: "email",
     attributeName: "Email",
+    validations: "Email",
+    info: "Please enter your email address.",
   },
   {
     type: "Select",
-    required: false,
+    isRequired: false,
     attribute: "country",
     attributeName: "Country",
   },
@@ -35,7 +42,12 @@ function App() {
         title='Edit Entity'
         description='This is a form for editing an entity.'
         editEntries={editEntries}
-        entityObj={{}}
+        entityObj={{
+          name: "John Doe",
+          dob: "1980-01-01",
+          email: "john.doe@email.com",
+          country: "Canada",
+        }}
         onSubmitSuccess={() => console.log("Form submitted successfully.")}
       />
     </div>
