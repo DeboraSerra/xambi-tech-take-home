@@ -7,6 +7,7 @@ import Article from "./Fields/Article";
 import Checkbox from "./Fields/Checkbox";
 import Date from "./Fields/Date";
 import DoubleTextList from "./Fields/DoubleTextList";
+import MultipleSelect from "./Fields/MultipleSelect";
 import Photo from "./Fields/Photo";
 import ProfilePhoto from "./Fields/ProfilePhoto";
 import Radio from "./Fields/Radio";
@@ -21,6 +22,18 @@ const toast = {};
 export function EditForm(props) {
   const [entity, setEntity] = useState(props.entityObj);
   const [characterCounts, setCharacterCounts] = useState({});
+
+  const [multipleSelectValues, setMultipleSelectValues] = useState([]);
+  useEffect(() => {
+    const multipleSelect = props.editEntries.find((entry) => {
+      return entry.type === EditEntryType.MultipleSelect;
+    })
+    const currMultipleSelectValues = multipleSelect.options.map((option) => {
+      const isSelected = entity?.[multipleSelect.attribute]?.includes(option.value);
+      return { value: option.value, isSelected };
+    })
+    setMultipleSelectValues(currMultipleSelectValues);
+  }, [props.editEntries, entity]);
 
   const [uploadPhotoMap, setUploadPhotoMap] = useState({});
 
@@ -421,6 +434,16 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
+                } else if (editEntry.type === EditEntryType.MultipleSelect) {
+                  return (
+                    <MultipleSelect
+                      editEntry={editEntry}
+                      entity={entity}
+                      requiredMark={requiredMark}
+                      multipleSelectValues={multipleSelectValues}
+                      setMultipleSelectValues={setMultipleSelectValues}
+                    />
+                  );
                 }
               })}
             </div>
@@ -472,4 +495,5 @@ EditForm.propTypes = {
   description: PropTypes.string,
   entityObj: PropTypes.object,
   onSubmitSuccess: PropTypes.func,
+  buttonText: PropTypes.string,
 };
