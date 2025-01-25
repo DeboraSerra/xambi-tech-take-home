@@ -9,8 +9,27 @@ const MultipleSelect = ({
   setMultipleSelectValues,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const selectItem = (option) => {
+    setMultipleSelectValues((prev) => {
+      return prev.map((item) => {
+        if (item.value === option.value) {
+          return { ...item, isSelected: !item.isSelected };
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleOpen = (e) => {
+    if (e.target.closest(".multiselect__pill")) {
+      return;
+    }
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <div className='col-span-6 sm:col-span-3'>
+    <div className='col-span-6 sm:col-span-3 relative'>
       <label
         htmlFor={editEntry.attribute}
         className='block text-sm font-medium text-gray-700'
@@ -22,44 +41,47 @@ const MultipleSelect = ({
           </span>
         )}
       </label>
-      <div>
-        <div className='flex flex-wrap border border-gray-300 p-2' onClick={() => setIsOpen(!isOpen)}>
-          {multipleSelectValues.filter((it) => it.isSelected).map((option, index) => (
-            <p key={index} className='flex items-center'>
-              {option.value}
-              <span onClick={() => {
-                setMultipleSelectValues((prev) => {
-                  return prev.map((item) => {
-                    if (item.value === option.value) {
-                      return { ...item, isSelected: false };
-                    }
-                    return item;
-                  });
-                });
-              }}>X</span>
-            </p>
-          ))}
-        </div>
+      <div className='w-full my-2'>
+        <button
+          className='flex border w-full border-gray-300 p-[2px] min-h-8 font-medium text-gray-700 items-center rounded'
+          onClick={handleOpen}
+        >
+          <div className='flex flex-wrap grow gap-[5px]'>
+            {multipleSelectValues
+              .filter((it) => it.isSelected)
+              .map((option) => (
+                <p key={option.id} className='multiselect__pill'>
+                  {option.value}
+                  <button
+                    className='multiselect__button'
+                    onClick={() => selectItem(option)}
+                  >
+                    &#x2715;
+                  </button>
+                </p>
+              ))}
+          </div>
+          <span
+            className={`multiselect__button transition-all ${
+              !isOpen ? "rotate-180" : ""
+            }`}
+          >
+            &#8963;{" "}
+          </span>
+        </button>
         {isOpen && (
-          <div className='my-2'>
-            {editEntry.options.map((option, index) => (
-              <p
-                key={index}
-                className='flex items-center'
-                onClick={() => {
-                  setMultipleSelectValues((prev) => {
-                    return prev.map((item) => {
-                      if (item.value === option.value) {
-                        return { ...item, isSelected: !item.isSelected };
-                      }
-                      return item;
-                    });
-                  });
-                }}
-              >
-                {option.value}
-              </p>
-            ))}
+          <div className='multiselect__options'>
+            {multipleSelectValues
+              .filter((it) => !it.isSelected)
+              .map((option) => (
+                <button
+                  key={option.id}
+                  className='multiselect__options--item'
+                  onClick={() => selectItem(option)}
+                >
+                  {option.value}
+                </button>
+              ))}
           </div>
         )}
       </div>
@@ -83,4 +105,12 @@ MultipleSelect.propTypes = {
   }),
   entity: PropTypes.object,
   requiredMark: PropTypes.string,
+  multipleSelectValues: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string,
+      isSelected: PropTypes.bool,
+      id: PropTypes.number,
+    })
+  ),
+  setMultipleSelectValues: PropTypes.func,
 };

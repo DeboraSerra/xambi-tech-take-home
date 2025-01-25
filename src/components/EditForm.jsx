@@ -27,12 +27,16 @@ export function EditForm(props) {
   useEffect(() => {
     const multipleSelect = props.editEntries.find((entry) => {
       return entry.type === EditEntryType.MultipleSelect;
-    })
+    });
     const currMultipleSelectValues = multipleSelect.options.map((option) => {
-      const isSelected = entity?.[multipleSelect.attribute]?.includes(option.value);
+      const isSelected = entity?.[multipleSelect.attribute]?.includes(
+        option.value
+      );
       return { value: option.value, isSelected };
-    })
-    setMultipleSelectValues(currMultipleSelectValues);
+    });
+    setMultipleSelectValues(
+      currMultipleSelectValues.sort((a, b) => a.value.localeCompare(b.value))
+    );
   }, [props.editEntries, entity]);
 
   const [uploadPhotoMap, setUploadPhotoMap] = useState({});

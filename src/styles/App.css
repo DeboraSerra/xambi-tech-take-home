@@ -1,38 +1,19 @@
-.App {
-  text-align: center;
+.multiselect__pill {
+  color: #5c8adb;
+
+  @apply flex items-center py-[2px] px-[4px] border border-gray-300 rounded text-sm font-semibold gap-1;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.multiselect__button {
+  color: #6E7E9D;
+  @apply text-slate-500;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.multiselect__options {
+  @apply absolute bg-white w-full rounded border border-gray-300 shadow-sm sm:text-sm flex flex-wrap
+  gap-2 py-2 px-1;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.multiselect__options--item {
+  @apply cursor-pointer py-1 px-2 rounded-md text-sm font-medium text-gray-900 gap-1 border border-gray-300 hover:border-indigo-500 hover:ring-indigo-500 text-center grow max-w-[110px];
 }
