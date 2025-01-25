@@ -7,8 +7,8 @@ import Article from "./Fields/Article";
 import Checkbox from "./Fields/Checkbox";
 import Date from "./Fields/Date";
 import DoubleTextList from "./Fields/DoubleTextList";
-import Multiselect from "./Fields/MultipleSelect";
 import Photo from "./Fields/Photo";
+import PillList from "./Fields/PillList";
 import ProfilePhoto from "./Fields/ProfilePhoto";
 import Radio from "./Fields/Radio";
 import Select from "./Fields/Select";
@@ -23,7 +23,7 @@ export function EditForm(props) {
   const [entity, setEntity] = useState(props.entityObj);
   const [characterCounts, setCharacterCounts] = useState({});
 
-  const [multiselectValues, setMultiselectValues] = useState([]);
+  const [pillList, setPillList] = useState([]);
   useEffect(() => {
     const multiselect = props.editEntries.find((entry) => {
       return entry.type === EditEntryType.Multiselect;
@@ -34,7 +34,7 @@ export function EditForm(props) {
       );
       return { value: option.value, isSelected };
     });
-    setMultiselectValues(
+    setPillList(
       currMultiselectValues.sort((a, b) => a.value.localeCompare(b.value))
     );
   }, [props.editEntries, entity]);
@@ -304,7 +304,7 @@ export function EditForm(props) {
                         entity={entity}
                         requiredMark={requiredMark}
                       />
-                    )
+                    );
                   case EditEntryType.Select:
                     return (
                       <Select
@@ -313,7 +313,7 @@ export function EditForm(props) {
                         entity={entity}
                         requiredMark={requiredMark}
                       />
-                    )
+                    );
                   case EditEntryType.Date:
                     return (
                       <Date
@@ -322,7 +322,7 @@ export function EditForm(props) {
                         entity={entity}
                         requiredMark={requiredMark}
                       />
-                    )
+                    );
                   case EditEntryType.TextList:
                     return (
                       <TextList
@@ -334,7 +334,7 @@ export function EditForm(props) {
                         setListFieldSize={setListFieldSize}
                         index={index}
                       />
-                    )
+                    );
                   case EditEntryType.DoubleTextList:
                     return (
                       <DoubleTextList
@@ -346,7 +346,7 @@ export function EditForm(props) {
                         listFieldSize={listFieldSize}
                         setListFieldSize={setListFieldSize}
                       />
-                    )
+                    );
                   case EditEntryType.Checkbox:
                     return (
                       <Checkbox
@@ -354,7 +354,7 @@ export function EditForm(props) {
                         editEntry={editEntry}
                         setCheckboxFieldValue={setCheckboxFieldValue}
                       />
-                    )
+                    );
                   case EditEntryType.Radio:
                     return (
                       <Radio
@@ -365,7 +365,7 @@ export function EditForm(props) {
                         requiredMark={requiredMark}
                         index={index}
                       />
-                    )
+                    );
                   case EditEntryType.TextArea:
                     return (
                       <TextArea
@@ -376,11 +376,11 @@ export function EditForm(props) {
                         setCharacterCounts={setCharacterCounts}
                         requiredMark={requiredMark}
                       />
-                    )
+                    );
                   case EditEntryType.File:
-                    return null
+                    return null;
                   case EditEntryType.FilePhoto:
-                    return null
+                    return null;
                   case EditEntryType.ProfilePhoto:
                     return (
                       <ProfilePhoto
@@ -392,7 +392,7 @@ export function EditForm(props) {
                         shadowFileInput={shadowFileInput}
                         index={index}
                       />
-                    )
+                    );
                   case EditEntryType.Photo:
                     return (
                       <Photo
@@ -404,7 +404,7 @@ export function EditForm(props) {
                         shadowFileInput={shadowFileInput}
                         index={index}
                       />
-                    )
+                    );
                   case EditEntryType.Article:
                     return (
                       <Article
@@ -415,7 +415,7 @@ export function EditForm(props) {
                         shadowFileInput={shadowFileInput}
                         uploadPhotoMap={uploadPhotoMap}
                       />
-                    )
+                    );
                   case EditEntryType.Address:
                     return (
                       <Address
@@ -423,7 +423,7 @@ export function EditForm(props) {
                         editEntry={editEntry}
                         entity={entity}
                       />
-                    )
+                    );
                   case EditEntryType.Showcase:
                     return (
                       <Showcase
@@ -434,173 +434,21 @@ export function EditForm(props) {
                         uploadPhotoMap={uploadPhotoMap}
                         index={index}
                       />
-                    )
+                    );
                   case EditEntryType.Multiselect:
                     return (
-                      <Multiselect
+                      <PillList
                         key={editEntry.attribute}
                         editEntry={editEntry}
                         entity={entity}
                         requiredMark={requiredMark}
-                        multiselectValues={multiselectValues}
-                        setMultiselectValues={setMultiselectValues}
+                        pillList={pillList}
+                        setPillList={setPillList}
                       />
-                    )
+                    );
                   default:
-                    
+                    return null;
                 }
-                if (!editEntry.type || editEntry.type === EditEntryType.Text) {
-                  return (
-                    <Text
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Select) {
-                  return (
-                    <Select
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Date) {
-                  return (
-                    <Date
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.TextList) {
-                  return (
-                    <TextList
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                      listFieldSize={listFieldSize}
-                      setListFieldSize={setListFieldSize}
-                      index={index}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.DoubleTextList) {
-                  return (
-                    <DoubleTextList
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                      index={index}
-                      listFieldSize={listFieldSize}
-                      setListFieldSize={setListFieldSize}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Checkbox) {
-                  return (
-                    <Checkbox
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      setCheckboxFieldValue={setCheckboxFieldValue}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Radio) {
-                  return (
-                    <Radio
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      radioFieldValue={radioFieldValue}
-                      setRadioFieldValue={setRadioFieldValue}
-                      requiredMark={requiredMark}
-                      index={index}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.TextArea) {
-                  return (
-                    <TextArea
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      characterCounts={characterCounts}
-                      setCharacterCounts={setCharacterCounts}
-                      requiredMark={requiredMark}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.File) {
-                  return null;
-                } else if (editEntry.type === EditEntryType.FilePhoto) {
-                  return null;
-                } else if (editEntry.type === EditEntryType.ProfilePhoto) {
-                  return (
-                    <ProfilePhoto
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                      uploadPhotoMap={uploadPhotoMap}
-                      shadowFileInput={shadowFileInput}
-                      index={index}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Photo) {
-                  return (
-                    <Photo
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      uploadPhotoMap={uploadPhotoMap}
-                      requiredMark={requiredMark}
-                      entity={entity}
-                      shadowFileInput={shadowFileInput}
-                      index={index}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Article) {
-                  return (
-                    <Article
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      index={index}
-                      shadowFileInput={shadowFileInput}
-                      uploadPhotoMap={uploadPhotoMap}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Address) {
-                  return (
-                    <Address
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Showcase) {
-                  return (
-                    <Showcase
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      shadowFileInput={shadowFileInput}
-                      uploadPhotoMap={uploadPhotoMap}
-                      index={index}
-                    />
-                  );
-                } else if (editEntry.type === EditEntryType.Multiselect) {
-                  return (
-                    <Multiselect
-                      key={editEntry.attribute}
-                      editEntry={editEntry}
-                      entity={entity}
-                      requiredMark={requiredMark}
-                      MultiselectValues={multiselectValues}
-                      setMultiselectValues={setMultiselectValues}
-                    />
-                  );
-                }
-                return null;
               })}
             </div>
           </div>
@@ -645,6 +493,7 @@ EditForm.propTypes = {
       info: PropTypes.string,
       characterCount: PropTypes.number,
       type: PropTypes.oneOf(Object.values(EditEntryType)),
+      condition: PropTypes.bool,
     })
   ),
   title: PropTypes.string,
