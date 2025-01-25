@@ -34,7 +34,7 @@ const editEntries = [
     attributeName: "Country",
   },
   {
-    type: "Multiselect",
+    type: "PillList",
     isRequired: false,
     attribute: "languages",
     attributeName: "Languages",

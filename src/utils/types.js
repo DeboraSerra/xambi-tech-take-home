@@ -14,7 +14,7 @@ export const EditEntryType = {
   Date: "Date",
   Select: "Select",
   Showcase: "Showcase",
-  Multiselect: "Multiselect",
+  PillList: "PillList",
 };
 
 export const ValidationType = {

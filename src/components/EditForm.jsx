@@ -26,7 +26,7 @@ export function EditForm(props) {
   const [pillList, setPillList] = useState([]);
   useEffect(() => {
     const multiselect = props.editEntries.find((entry) => {
-      return entry.type === EditEntryType.Multiselect;
+      return entry.type === EditEntryType.PillList;
     });
     const currMultiselectValues = multiselect.options.map((option) => {
       const isSelected = entity?.[multiselect.attribute]?.includes(
@@ -435,7 +435,7 @@ export function EditForm(props) {
                         index={index}
                       />
                     );
-                  case EditEntryType.Multiselect:
+                  case EditEntryType.PillList:
                     return (
                       <PillList
                         key={editEntry.attribute}
