@@ -1,17 +1,17 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 
-const MultipleSelect = ({
+const Multiselect = ({
   editEntry,
   requiredMark,
   entity,
-  multipleSelectValues,
-  setMultipleSelectValues,
+  multiselectValues,
+  setMultiselectValues,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const selectItem = (option) => {
-    setMultipleSelectValues((prev) => {
+    setMultiselectValues((prev) => {
       return prev.map((item) => {
         if (item.value === option.value) {
           return { ...item, isSelected: !item.isSelected };
@@ -47,19 +47,17 @@ const MultipleSelect = ({
           onClick={handleOpen}
         >
           <div className='flex flex-wrap grow gap-[5px]'>
-            {multipleSelectValues
-              .filter((it) => it.isSelected)
-              .map((option) => (
-                <p key={option.id} className='multiselect__pill'>
-                  {option.value}
-                  <button
-                    className='multiselect__button'
-                    onClick={() => selectItem(option)}
-                  >
-                    &#x2715;
-                  </button>
-                </p>
-              ))}
+            {multiselectValues.filter((it) => it.isSelected).map((option) => (
+              <p key={option.id} className='multiselect__pill'>
+                {option.value}
+                <button
+                  className='multiselect__button'
+                  onClick={() => selectItem(option)}
+                >
+                  &#x2715;
+                </button>
+              </p>
+            ))}
           </div>
           <span
             className={`multiselect__button transition-all ${
@@ -71,17 +69,15 @@ const MultipleSelect = ({
         </button>
         {isOpen && (
           <div className='multiselect__options'>
-            {multipleSelectValues
-              .filter((it) => !it.isSelected)
-              .map((option) => (
-                <button
-                  key={option.id}
-                  className='multiselect__options--item'
-                  onClick={() => selectItem(option)}
-                >
-                  {option.value}
-                </button>
-              ))}
+            {multiselectValues.filter((it) => !it.isSelected).map((option) => (
+              <button
+                key={option.id}
+                className='multiselect__options--item'
+                onClick={() => selectItem(option)}
+              >
+                {option.value}
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -89,9 +85,9 @@ const MultipleSelect = ({
   );
 };
 
-export default MultipleSelect;
+export default Multiselect;
 
-MultipleSelect.propTypes = {
+Multiselect.propTypes = {
   editEntry: PropTypes.shape({
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
@@ -105,12 +101,12 @@ MultipleSelect.propTypes = {
   }),
   entity: PropTypes.object,
   requiredMark: PropTypes.string,
-  multipleSelectValues: PropTypes.arrayOf(
+  multiselectValues: PropTypes.arrayOf(
     PropTypes.shape({
       value: PropTypes.string,
       isSelected: PropTypes.bool,
       id: PropTypes.number,
     })
   ),
-  setMultipleSelectValues: PropTypes.func,
+  setMultiselectValues: PropTypes.func,
 };

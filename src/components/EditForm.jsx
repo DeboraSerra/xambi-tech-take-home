@@ -7,7 +7,7 @@ import Article from "./Fields/Article";
 import Checkbox from "./Fields/Checkbox";
 import Date from "./Fields/Date";
 import DoubleTextList from "./Fields/DoubleTextList";
-import MultipleSelect from "./Fields/MultipleSelect";
+import Multiselect from "./Fields/MultipleSelect";
 import Photo from "./Fields/Photo";
 import ProfilePhoto from "./Fields/ProfilePhoto";
 import Radio from "./Fields/Radio";
@@ -23,23 +23,23 @@ export function EditForm(props) {
   const [entity, setEntity] = useState(props.entityObj);
   const [characterCounts, setCharacterCounts] = useState({});
 
-  const [multipleSelectValues, setMultipleSelectValues] = useState([]);
+  const [multiselectValues, setMultiselectValues] = useState([]);
   useEffect(() => {
-    const multipleSelect = props.editEntries.find((entry) => {
-      return entry.type === EditEntryType.MultipleSelect;
+    const multiselect = props.editEntries.find((entry) => {
+      return entry.type === EditEntryType.Multiselect;
     });
-    const currMultipleSelectValues = multipleSelect.options.map((option) => {
-      const isSelected = entity?.[multipleSelect.attribute]?.includes(
+    const currMultiselectValues = multiselect.options.map((option) => {
+      const isSelected = entity?.[multiselect.attribute]?.includes(
         option.value
       );
       return { value: option.value, isSelected };
     });
-    setMultipleSelectValues(
-      currMultipleSelectValues.sort((a, b) => a.value.localeCompare(b.value))
+    setMultiselectValues(
+      currMultiselectValues.sort((a, b) => a.value.localeCompare(b.value))
     );
   }, [props.editEntries, entity]);
 
-  const [uploadPhotoMap, setUploadPhotoMap] = useState({});
+  const [uploadPhotoMap] = useState({});
 
   useEffect(() => {
     setEntity(props.entityObj);
@@ -60,14 +60,14 @@ export function EditForm(props) {
         props.entityObj &&
         (entry.type === EditEntryType.TextList ||
           entry.type === EditEntryType.DoubleTextList);
-      return isArrField
-        ? entry.attribute in props.entityObj && props.entityObj[entry.attribute]
+      const isArrayLength =
+        entry.attribute in props.entityObj && props.entityObj[entry.attribute]
           ? Object.keys(props.entityObj[entry.attribute]).length
-          : 0
-        : 0;
+          : 0;
+      return isArrField ? isArrayLength : 0;
     });
     setListFieldSize(currListFieldSize);
-  }, [props.editEntries]);
+  }, [props.editEntries, props.entityObj]);
 
   const [radioFieldValue, setRadioFieldValue] = useState([]);
   useEffect(() => {
@@ -77,231 +77,209 @@ export function EditForm(props) {
       return isRadioField ? props.entityObj[entry.attribute] : "";
     });
     setRadioFieldValue(currRadioFieldValue);
-  }, [props.editEntries]);
+  }, [props.editEntries, props.entityObj]);
 
   const [checkboxFieldValue, setCheckboxFieldValue] = useState(false);
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const updateTargets = new Set(
+      props.editEntries.map((editEntry) => editEntry.attribute)
+    );
+    const editEntryIdx = Object.fromEntries(
+      props.editEntries.map((editEntry, index) => [editEntry.attribute, index])
+    );
+
+    for (const target of event.target) {
+      if (!target.name) continue;
+      if (updateTargets.has(target.name)) {
+        // if target is radio button, only update if it is checked
+        if (target.type === "radio" && !target.checked) continue;
+        entity[target.name] = target.value;
+      } else if (
+        target.name.includes("_") &&
+        updateTargets.has(target.name.split("_")[0])
+      ) {
+        const entity_field = target.name.split("_")[0];
+        const entity_sub_field = target.name.split("_").slice(1).join("_");
+
+        if (entity_sub_field.includes("listfieldidx_")) {
+          const entity_curr_idx = entity_sub_field.split("_")[1];
+          const entity_sub_sub_field = entity_sub_field.split("_").slice(2);
+          const max_idx_to_take = listFieldSize[editEntryIdx[entity_field]];
+          if (entity_curr_idx >= max_idx_to_take) continue;
+          if (!entity[entity_field]) entity[entity_field] = [];
+          if (!entity[entity_field][entity_curr_idx])
+            entity[entity_field][entity_curr_idx] = {};
+          entity[entity_field][entity_curr_idx][entity_sub_sub_field] =
+            target.value;
+        } else if (entity_sub_field.includes("listfieldsingleidx_")) {
+          const entity_curr_idx = entity_sub_field.split("_")[1];
+          const max_idx_to_take = listFieldSize[editEntryIdx[entity_field]];
+          if (entity_curr_idx >= max_idx_to_take) continue;
+          if (!entity[entity_field]) entity[entity_field] = [];
+          if (!entity[entity_field][entity_curr_idx])
+            entity[entity_field][entity_curr_idx] = {};
+          entity[entity_field][entity_curr_idx] = target.value;
+          console.log(entity[entity_field], entity["badges"], entity);
+        } else {
+          if (!entity[entity_field]) entity[entity_field] = {};
+
+          if (
+            typeof target.value === "string" &&
+            (target.value.includes("\n") ||
+              (entity_sub_field === "content" && target.value))
+          ) {
+            entity[entity_field][entity_sub_field] = target.value
+              .split("\n")
+              .filter((e) => !!e);
+          } else {
+            entity[entity_field][entity_sub_field] = target.value;
+          }
+        }
+      }
+    }
+
+    for (const [target_name, target_value] of Object.entries(uploadPhotoMap)) {
+      if (updateTargets.has(target_name)) {
+        entity[target_name] = target_value;
+      } else if (
+        target_name.includes("_") &&
+        updateTargets.has(target_name.split("_")[0])
+      ) {
+        const entity_field = target_name.split("_")[0];
+        const entity_sub_field = target_name.split("_").slice(1).join("_");
+        if (!entity[entity_field]) entity[entity_field] = {};
+        entity[entity_field][entity_sub_field] = target_value;
+      }
+    }
+
+    for (const editEntry of props.editEntries) {
+      if (editEntry.isRequired) {
+        if (!entity[editEntry.attribute]) {
+          toast.error(`Field is required: "${editEntry.attributeName}"`);
+          return;
+        }
+      }
+      if (editEntry.type === EditEntryType.Checkbox) {
+        entity[editEntry.attribute] = checkboxFieldValue;
+      }
+
+      // For Article fields
+      if (editEntry.type === EditEntryType.Article) {
+        const article = entity[editEntry.attribute];
+
+        const filledCount = [
+          article["title"],
+          article["content"],
+          article["image_url"],
+          article["subtitle"],
+          article["button_link"],
+        ].filter((e) => e).length;
+
+        const mandatoryFilledCount = [
+          article["title"],
+          article["content"],
+          article["image_url"],
+        ].filter((e) => e).length;
+
+        if (filledCount > 0 && mandatoryFilledCount < 3) {
+          console.log(
+            filledCount,
+            mandatoryFilledCount,
+            article["title"],
+            article["content"],
+            article["image_url"]
+          );
+          toast.error(
+            "Title, Content, and Photo are required for " +
+              editEntry.attributeName +
+              "."
+          );
+          return;
+        }
+        if (!article["title"] && !article["content"]) {
+          entity[editEntry.attribute] = {};
+        }
+      }
+
+      // For TextList fields
+      const max_idx_to_take = listFieldSize[editEntryIdx[editEntry.attribute]];
+      if (max_idx_to_take > 0) {
+        entity[editEntry.attribute] = Object.fromEntries(
+          Object.entries(entity[editEntry.attribute]).filter(
+            ([k, v]) => parseInt(k, 10) < max_idx_to_take && v["0"] && v["1"]
+          )
+        );
+      }
+
+      if (editEntry.validations) {
+        for (const validation of editEntry.validations) {
+          if (
+            !validateValue(
+              entity[editEntry.attribute],
+              editEntry.attributeName,
+              validation
+            )
+          ) {
+            return;
+          }
+        }
+      }
+
+      // For Showcase fields
+      if (editEntry.type === EditEntryType.Showcase) {
+        const showcase = entity[editEntry.attribute];
+        const isInstagramShowcase = editEntry.extraParam.isInstagramShowcase;
+        const numRequiredFields = isInstagramShowcase ? 5 : 2; // All fields required
+        const maxPhotos = editEntry.extraParam.maxPhotos;
+
+        const numPhotos = 0;
+        if (maxPhotos && numPhotos > maxPhotos) {
+          toast.error(
+            `Please make sure the ${editEntry.attributeName} section has no more than ${maxPhotos} photos.`
+          );
+          return;
+        }
+
+        let filledCount = [showcase["title"], numPhotos > 0].filter(
+          (e) => e
+        ).length;
+
+        if (isInstagramShowcase) {
+          filledCount += [
+            showcase["handle"],
+            showcase["url"],
+            showcase["profile_photo_url"],
+          ].filter((e) => e).length;
+        }
+
+        if (filledCount > 0 && filledCount < numRequiredFields) {
+          toast.error(
+            `Title${
+              isInstagramShowcase ? ", Handle, Profile URL, Profile Photo," : ""
+            } and Images are required for ${editEntry.attributeName}.`
+          );
+          return;
+        }
+      }
+    }
+
+    if (props.onSubmitSuccess) {
+      try {
+        props.onSubmitSuccess(entity);
+        toast.success("Successfully submitted!");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   return (
-    <div class='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative lg:pt-5 text-left'>
+    <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative lg:pt-5 text-left'>
       <form
         className='space-y-8 divide-y divide-gray-200'
-        onSubmit={(event) => {
-          event.preventDefault();
-          // if (!entity || !entity["id"]) {
-          //   toast.error("Unknown error.");
-          //   return;
-          // }
-          const updateTargets = new Set(
-            props.editEntries.map((editEntry) => editEntry.attribute)
-          );
-          const editEntryIdx = Object.fromEntries(
-            props.editEntries.map((editEntry, index) => [
-              editEntry.attribute,
-              index,
-            ])
-          );
-
-          for (const target of event.target) {
-            if (!target.name) continue;
-            if (updateTargets.has(target.name)) {
-              // if target is radio button, only update if it is checked
-              if (target.type === "radio" && !target.checked) continue;
-              entity[target.name] = target.value;
-            } else if (
-              target.name.includes("_") &&
-              updateTargets.has(target.name.split("_")[0])
-            ) {
-              const entity_field = target.name.split("_")[0];
-              const entity_sub_field = target.name
-                .split("_")
-                .slice(1)
-                .join("_");
-
-              if (entity_sub_field.includes("listfieldidx_")) {
-                const entity_curr_idx = entity_sub_field.split("_")[1];
-                const entity_sub_sub_field = entity_sub_field
-                  .split("_")
-                  .slice(2);
-                const max_idx_to_take =
-                  listFieldSize[editEntryIdx[entity_field]];
-                if (entity_curr_idx >= max_idx_to_take) continue;
-                if (!entity[entity_field]) entity[entity_field] = [];
-                if (!entity[entity_field][entity_curr_idx])
-                  entity[entity_field][entity_curr_idx] = {};
-                entity[entity_field][entity_curr_idx][entity_sub_sub_field] =
-                  target.value;
-              } else if (entity_sub_field.includes("listfieldsingleidx_")) {
-                const entity_curr_idx = entity_sub_field.split("_")[1];
-                const max_idx_to_take =
-                  listFieldSize[editEntryIdx[entity_field]];
-                if (entity_curr_idx >= max_idx_to_take) continue;
-                if (!entity[entity_field]) entity[entity_field] = [];
-                if (!entity[entity_field][entity_curr_idx])
-                  entity[entity_field][entity_curr_idx] = {};
-                entity[entity_field][entity_curr_idx] = target.value;
-                console.log(entity[entity_field], entity["badges"], entity);
-              } else {
-                if (!entity[entity_field]) entity[entity_field] = {};
-
-                if (
-                  typeof target.value === "string" &&
-                  (target.value.includes("\n") ||
-                    (entity_sub_field === "content" && target.value))
-                ) {
-                  entity[entity_field][entity_sub_field] = target.value
-                    .split("\n")
-                    .filter((e) => !!e);
-                } else {
-                  entity[entity_field][entity_sub_field] = target.value;
-                }
-              }
-            }
-          }
-
-          for (const [target_name, target_value] of Object.entries(
-            uploadPhotoMap
-          )) {
-            if (updateTargets.has(target_name)) {
-              entity[target_name] = target_value;
-            } else if (
-              target_name.includes("_") &&
-              updateTargets.has(target_name.split("_")[0])
-            ) {
-              const entity_field = target_name.split("_")[0];
-              const entity_sub_field = target_name
-                .split("_")
-                .slice(1)
-                .join("_");
-              if (!entity[entity_field]) entity[entity_field] = {};
-              entity[entity_field][entity_sub_field] = target_value;
-            }
-          }
-
-          for (const editEntry of props.editEntries) {
-            if (editEntry.isRequired) {
-              if (!entity[editEntry.attribute]) {
-                toast.error(`Field is required: "${editEntry.attributeName}"`);
-                return;
-              }
-            }
-            if (editEntry.type === EditEntryType.Checkbox) {
-              entity[editEntry.attribute] = checkboxFieldValue;
-            }
-
-            // For Article fields
-            if (editEntry.type === EditEntryType.Article) {
-              const article = entity[editEntry.attribute];
-
-              const filledCount = [
-                article["title"],
-                article["content"],
-                article["image_url"],
-                article["subtitle"],
-                article["button_link"],
-              ].filter((e) => e).length;
-
-              const mandatoryFilledCount = [
-                article["title"],
-                article["content"],
-                article["image_url"],
-              ].filter((e) => e).length;
-
-              if (filledCount > 0 && mandatoryFilledCount < 3) {
-                console.log(
-                  filledCount,
-                  mandatoryFilledCount,
-                  article["title"],
-                  article["content"],
-                  article["image_url"]
-                );
-                toast.error(
-                  "Title, Content, and Photo are required for " +
-                    editEntry.attributeName +
-                    "."
-                );
-                return;
-              }
-              if (!article["title"] && !article["content"]) {
-                entity[editEntry.attribute] = {};
-              }
-            }
-
-            // For TextList fields
-            const max_idx_to_take =
-              listFieldSize[editEntryIdx[editEntry.attribute]];
-            if (max_idx_to_take > 0) {
-              entity[editEntry.attribute] = Object.fromEntries(
-                Object.entries(entity[editEntry.attribute]).filter(
-                  ([k, v]) =>
-                    parseInt(k, 10) < max_idx_to_take && v["0"] && v["1"]
-                )
-              );
-            }
-
-            if (editEntry.validations) {
-              for (const validation of editEntry.validations) {
-                if (
-                  !validateValue(
-                    entity[editEntry.attribute],
-                    editEntry.attributeName,
-                    validation
-                  )
-                ) {
-                  return;
-                }
-              }
-            }
-
-            // For Showcase fields
-            if (editEntry.type === EditEntryType.Showcase) {
-              const showcase = entity[editEntry.attribute];
-              const isInstagramShowcase =
-                editEntry.extraParam.isInstagramShowcase;
-              const numRequiredFields = isInstagramShowcase ? 5 : 2; // All fields required
-              const maxPhotos = editEntry.extraParam.maxPhotos;
-
-              const numPhotos = 0;
-              if (maxPhotos && numPhotos > maxPhotos) {
-                toast.error(
-                  `Please make sure the ${editEntry.attributeName} section has no more than ${maxPhotos} photos.`
-                );
-                return;
-              }
-
-              let filledCount = [showcase["title"], numPhotos > 0].filter(
-                (e) => e
-              ).length;
-
-              if (isInstagramShowcase) {
-                filledCount += [
-                  showcase["handle"],
-                  showcase["url"],
-                  showcase["profile_photo_url"],
-                ].filter((e) => e).length;
-              }
-
-              if (filledCount > 0 && filledCount < numRequiredFields) {
-                toast.error(
-                  `Title${
-                    isInstagramShowcase
-                      ? ", Handle, Profile URL, Profile Photo,"
-                      : ""
-                  } and Images are required for ${editEntry.attributeName}.`
-                );
-                return;
-              }
-            }
-          }
-
-          if (props.onSubmitSuccess) {
-            try {
-              props.onSubmitSuccess(entity);
-              toast.success("Successfully submitted!");
-            } catch (error) {
-              console.log(error);
-            }
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         <div className='space-y-8 divide-y divide-gray-200'>
           <div>
@@ -311,39 +289,197 @@ export function EditForm(props) {
               </h3>
               <p className='my-2 text-sm text-gray-500'>{props.description}</p>
             </div>
-            <div class='mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
+            <div className='mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
               {props.editEntries.map((editEntry, index) => {
                 const requiredMark = editEntry.isRequired ? "*" : "";
                 if (editEntry.condition != null) {
-                  if (!editEntry.condition) return;
+                  if (!editEntry.condition) return null;
                 }
-                if (!editEntry.type || editEntry.type == EditEntryType.Text) {
+                switch (editEntry.type) {
+                  case EditEntryType.Text:
+                    return (
+                      <Text
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                      />
+                    )
+                  case EditEntryType.Select:
+                    return (
+                      <Select
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                      />
+                    )
+                  case EditEntryType.Date:
+                    return (
+                      <Date
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                      />
+                    )
+                  case EditEntryType.TextList:
+                    return (
+                      <TextList
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                        listFieldSize={listFieldSize}
+                        setListFieldSize={setListFieldSize}
+                        index={index}
+                      />
+                    )
+                  case EditEntryType.DoubleTextList:
+                    return (
+                      <DoubleTextList
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                        index={index}
+                        listFieldSize={listFieldSize}
+                        setListFieldSize={setListFieldSize}
+                      />
+                    )
+                  case EditEntryType.Checkbox:
+                    return (
+                      <Checkbox
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        setCheckboxFieldValue={setCheckboxFieldValue}
+                      />
+                    )
+                  case EditEntryType.Radio:
+                    return (
+                      <Radio
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        radioFieldValue={radioFieldValue}
+                        setRadioFieldValue={setRadioFieldValue}
+                        requiredMark={requiredMark}
+                        index={index}
+                      />
+                    )
+                  case EditEntryType.TextArea:
+                    return (
+                      <TextArea
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        characterCounts={characterCounts}
+                        setCharacterCounts={setCharacterCounts}
+                        requiredMark={requiredMark}
+                      />
+                    )
+                  case EditEntryType.File:
+                    return null
+                  case EditEntryType.FilePhoto:
+                    return null
+                  case EditEntryType.ProfilePhoto:
+                    return (
+                      <ProfilePhoto
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                        uploadPhotoMap={uploadPhotoMap}
+                        shadowFileInput={shadowFileInput}
+                        index={index}
+                      />
+                    )
+                  case EditEntryType.Photo:
+                    return (
+                      <Photo
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        uploadPhotoMap={uploadPhotoMap}
+                        requiredMark={requiredMark}
+                        entity={entity}
+                        shadowFileInput={shadowFileInput}
+                        index={index}
+                      />
+                    )
+                  case EditEntryType.Article:
+                    return (
+                      <Article
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        index={index}
+                        shadowFileInput={shadowFileInput}
+                        uploadPhotoMap={uploadPhotoMap}
+                      />
+                    )
+                  case EditEntryType.Address:
+                    return (
+                      <Address
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                      />
+                    )
+                  case EditEntryType.Showcase:
+                    return (
+                      <Showcase
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        shadowFileInput={shadowFileInput}
+                        uploadPhotoMap={uploadPhotoMap}
+                        index={index}
+                      />
+                    )
+                  case EditEntryType.Multiselect:
+                    return (
+                      <Multiselect
+                        key={editEntry.attribute}
+                        editEntry={editEntry}
+                        entity={entity}
+                        requiredMark={requiredMark}
+                        multiselectValues={multiselectValues}
+                        setMultiselectValues={setMultiselectValues}
+                      />
+                    )
+                  default:
+                    
+                }
+                if (!editEntry.type || editEntry.type === EditEntryType.Text) {
                   return (
                     <Text
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Select) {
+                } else if (editEntry.type === EditEntryType.Select) {
                   return (
                     <Select
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Date) {
+                } else if (editEntry.type === EditEntryType.Date) {
                   return (
                     <Date
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.TextList) {
+                } else if (editEntry.type === EditEntryType.TextList) {
                   return (
                     <TextList
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
@@ -352,9 +488,10 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.DoubleTextList) {
+                } else if (editEntry.type === EditEntryType.DoubleTextList) {
                   return (
                     <DoubleTextList
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
@@ -363,16 +500,18 @@ export function EditForm(props) {
                       setListFieldSize={setListFieldSize}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Checkbox) {
+                } else if (editEntry.type === EditEntryType.Checkbox) {
                   return (
                     <Checkbox
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       setCheckboxFieldValue={setCheckboxFieldValue}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Radio) {
+                } else if (editEntry.type === EditEntryType.Radio) {
                   return (
                     <Radio
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       radioFieldValue={radioFieldValue}
                       setRadioFieldValue={setRadioFieldValue}
@@ -380,9 +519,10 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.TextArea) {
+                } else if (editEntry.type === EditEntryType.TextArea) {
                   return (
                     <TextArea
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       characterCounts={characterCounts}
@@ -390,13 +530,14 @@ export function EditForm(props) {
                       requiredMark={requiredMark}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.File) {
+                } else if (editEntry.type === EditEntryType.File) {
                   return null;
-                } else if (editEntry.type == EditEntryType.FilePhoto) {
+                } else if (editEntry.type === EditEntryType.FilePhoto) {
                   return null;
-                } else if (editEntry.type == EditEntryType.ProfilePhoto) {
+                } else if (editEntry.type === EditEntryType.ProfilePhoto) {
                   return (
                     <ProfilePhoto
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
@@ -405,9 +546,10 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Photo) {
+                } else if (editEntry.type === EditEntryType.Photo) {
                   return (
                     <Photo
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       uploadPhotoMap={uploadPhotoMap}
                       requiredMark={requiredMark}
@@ -416,9 +558,10 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Article) {
+                } else if (editEntry.type === EditEntryType.Article) {
                   return (
                     <Article
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       index={index}
@@ -426,11 +569,18 @@ export function EditForm(props) {
                       uploadPhotoMap={uploadPhotoMap}
                     />
                   );
-                } else if (editEntry.type == EditEntryType.Address) {
-                  return <Address editEntry={editEntry} entity={entity} />;
+                } else if (editEntry.type === EditEntryType.Address) {
+                  return (
+                    <Address
+                      key={editEntry.attribute}
+                      editEntry={editEntry}
+                      entity={entity}
+                    />
+                  );
                 } else if (editEntry.type === EditEntryType.Showcase) {
                   return (
                     <Showcase
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       shadowFileInput={shadowFileInput}
@@ -438,17 +588,19 @@ export function EditForm(props) {
                       index={index}
                     />
                   );
-                } else if (editEntry.type === EditEntryType.MultipleSelect) {
+                } else if (editEntry.type === EditEntryType.Multiselect) {
                   return (
-                    <MultipleSelect
+                    <Multiselect
+                      key={editEntry.attribute}
                       editEntry={editEntry}
                       entity={entity}
                       requiredMark={requiredMark}
-                      multipleSelectValues={multipleSelectValues}
-                      setMultipleSelectValues={setMultipleSelectValues}
+                      MultiselectValues={multiselectValues}
+                      setMultiselectValues={setMultiselectValues}
                     />
                   );
                 }
+                return null;
               })}
             </div>
           </div>
