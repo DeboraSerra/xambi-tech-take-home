@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Multiselect = ({
   editEntry,
@@ -9,6 +9,20 @@ const Multiselect = ({
   setMultiselectValues,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const multiselectRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const isMultiselect = multiselectRef.current.contains(e.target) || e.target.closest(".multiselect__pill");
+      if (multiselectRef.current && !isMultiselect) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  },[])
 
   const selectItem = (option) => {
     setMultiselectValues((prev) => {
@@ -29,7 +43,7 @@ const Multiselect = ({
   };
 
   return (
-    <div className='col-span-6 sm:col-span-3 relative'>
+    <div className='col-span-6 sm:col-span-3 relative' ref={multiselectRef}>
       <label
         htmlFor={editEntry.attribute}
         className='block text-sm font-medium text-gray-700'
