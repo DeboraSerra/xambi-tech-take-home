@@ -29,6 +29,11 @@ const PillList = ({
         id: new Date().getTime() * Math.random(),
       });
     }
+    if (e.key === "Backspace" && !e.target.value) {
+      setPillList((prev) => {
+        return prev.slice(0, prev.length - 1);
+      });
+    }
   };
 
   return (
