@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { useEffect, useRef, useState } from "react";
 
 const PillList = ({
   editEntry,
@@ -8,45 +7,33 @@ const PillList = ({
   pillList,
   setPillList,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const pillListRef = useRef(null);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      const isMultiselect =
-        pillListRef.current.contains(e.target) ||
-        e.target.closest(".multiselect__pill") ||
-        e.target.closest(".multiselect__options--item");
-      if (pillListRef.current && !isMultiselect) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("click", handleClick);
-    return () => {
-      document.removeEventListener("click", handleClick);
-    };
-  }, []);
-
-  const selectItem = (option) => {
+  const removeItem = (option) => {
     setPillList((prev) => {
-      return prev.map((item) => {
-        if (item.value === option.value) {
-          return { ...item, isSelected: !item.isSelected };
-        }
-        return item;
-      });
+      return prev.filter((item) => item.id !== option.id);
     });
   };
 
-  const handleOpen = (e) => {
-    if (e.target.closest(".multiselect__pill")) {
-      return;
+  const addItem = (option) => {
+    setPillList((prev) => {
+      return [...prev, option];
+    });
+  };
+
+  const handleInputSubmit = (e) => {
+    if (e.key === "Enter") {
+      e.target.id === "pillList" && e.preventDefault();
+      const value = document.querySelector("#pillList").value.trim();
+      document.querySelector("#pillList").value = "";
+      if (!value) return;
+      addItem({
+        value,
+        id: new Date().getTime() * Math.random(),
+      });
     }
-    setIsOpen(!isOpen);
   };
 
   return (
-    <div className='col-span-6 sm:col-span-3 relative' ref={pillListRef}>
+    <div className='col-span-6 sm:col-span-3 relative'>
       <label
         htmlFor={editEntry.attribute}
         className='block text-sm font-medium text-gray-700'
@@ -58,50 +45,31 @@ const PillList = ({
           </span>
         )}
       </label>
-      <div className='w-full my-2'>
-        <button
-          className='flex border w-full border-gray-300 p-[2px] min-h-8 font-medium text-gray-700 items-center rounded'
-          onClick={handleOpen}
-        >
-          <div className='flex flex-wrap grow gap-[5px]'>
-            {pillList
-              .filter((it) => it.isSelected)
-              .map((option) => (
-                <p key={option.value} className='multiselect__pill'>
-                  {option.value}
-                  <button
-                    className='multiselect__button'
-                    onClick={() => selectItem(option)}
-                  >
-                    &#x2715;
-                  </button>
-                </p>
-              ))}
-          </div>
-          <span
-            className={`multiselect__button transition-all ${
-              !isOpen ? "rotate-180" : ""
-            }`}
-          >
-            &#8963;{" "}
-          </span>
-        </button>
-        {isOpen && (
-          <div className='multiselect__options'>
-            {pillList
-              .filter((it) => !it.isSelected)
-              .map((option) => (
-                <button
-                  key={option.value}
-                  className='multiselect__options--item'
-                  onClick={() => selectItem(option)}
-                >
-                  {option.value}
-                </button>
-              ))}
-          </div>
-        )}
-      </div>
+      <label
+        htmlFor='pillList'
+        className='w-full my-2 flex border border-gray-300 p-[2px] min-h-8 font-medium text-gray-700 items-center rounded gap-[5px] flex-wrap'
+      >
+        {pillList.map((option) => (
+          <p key={option.id} className='multiselect__pill'>
+            {option.value}
+            <button
+              className='multiselect__button'
+              onClick={(e) => {
+                removeItem(option);
+              }}
+            >
+              &#x2715;
+            </button>
+          </p>
+        ))}
+        <input
+          name='pillList'
+          id='pillList'
+          type='text'
+          className='h-full grow border-none outline-none'
+          onKeyDown={handleInputSubmit}
+        />
+      </label>
     </div>
   );
 };

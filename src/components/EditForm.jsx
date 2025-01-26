@@ -25,18 +25,13 @@ export function EditForm(props) {
 
   const [pillList, setPillList] = useState([]);
   useEffect(() => {
-    const multiselect = props.editEntries.find((entry) => {
-      return entry.type === EditEntryType.PillList;
-    });
-    const currMultiselectValues = multiselect.options.map((option) => {
-      const isSelected = entity?.[multiselect.attribute]?.includes(
-        option.value
-      );
-      return { value: option.value, isSelected };
-    });
-    setPillList(
-      currMultiselectValues.sort((a, b) => a.value.localeCompare(b.value))
+    const isPillListField = props.editEntries.find(
+      (entry) => entry.type === EditEntryType.PillList
     );
+    const currPillListValue = isPillListField
+      ? entity[isPillListField.attribute]
+      : [];
+    currPillListValue.length && setPillList(currPillListValue);
   }, [props.editEntries, entity]);
 
   const [uploadPhotoMap] = useState({});
