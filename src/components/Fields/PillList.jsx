@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 const PillList = ({
   editEntry,
   requiredMark,
-  entity,
   pillList,
   setPillList,
 }) => {
@@ -81,14 +80,7 @@ PillList.propTypes = {
     attribute: PropTypes.string,
     attributeName: PropTypes.string,
     subName: PropTypes.string,
-    options: PropTypes.arrayOf(
-      PropTypes.shape({
-        value: PropTypes.string,
-        isSelected: PropTypes.bool,
-      })
-    ),
   }),
-  entity: PropTypes.object,
   requiredMark: PropTypes.string,
   pillList: PropTypes.arrayOf(
     PropTypes.shape({

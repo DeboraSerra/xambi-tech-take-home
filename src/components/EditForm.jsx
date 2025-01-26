@@ -435,7 +435,6 @@ export function EditForm(props) {
                       <PillList
                         key={editEntry.attribute}
                         editEntry={editEntry}
-                        entity={entity}
                         requiredMark={requiredMark}
                         pillList={pillList}
                         setPillList={setPillList}
